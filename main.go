@@ -3,14 +3,28 @@ package main
 import (
 	"github.com/emersion/go-imap/client"
 	"log"
+	"github.com/joho/godotenv"
+	"os"
 )
 
 //"github.com/emersion/go-imap"
 // https://github.com/emersion/go-imap/wiki/Fetching-messages
 
-const userMailAccount = "user@mail.acc"
+// Function to get the environment variable from .evn
+func getEnvKey(key string) string {
+	err := godoenv.Load()
+	
+	if err != nil {
+		log.Fatalf("Error  loading .env file")
+	}
+	
+	return os.Getenv(key)
+}
+
 const mailServer = "imap.gmail.com:993"
 const userMailPassword = "password"
+
+
 
 var c *client.Client
 
