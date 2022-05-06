@@ -1,40 +1,42 @@
 package main
 
 import (
-      "log"
-      "github.com/emersion/go-imap/client"
+	"github.com/emersion/go-imap/client"
+	"log"
 )
-      //"github.com/emersion/go-imap"
+
+//"github.com/emersion/go-imap"
+// https://github.com/emersion/go-imap/wiki/Fetching-messages
 
 const userMailAccount = "user@mail.acc"
 const mailServer = "imap.gmail.com:993"
 const userMailPassword = "password"
 
+var c *client.Client
+
 func connectToClientServer() {
-  c, err := client.DialTLS(mailServer, nil)
-  if err != nil {
-    log.Fatalf("Couldn't login, %v", err)
-  }
-  log.Println("Connected")
+	c, err := client.DialTLS(mailServer, nil)
+	if err != nil {
+		log.Fatalf("Couldn't login, %v", err)
+	}
 
-  defer c.Logout()
+	log.Println("Connected")
 
-  if err := c.Login(userMailAccount, userMailPassword); err != nil {
-    log.Fatalf("Couldn't login, %v", err)
-  }
-  log.Println("Logged in!")
+	if err := c.Login(userMailAccount, userMailPassword); err != nil {
+		log.Fatalf("Couldn't login, %v", err)
+	}
+	log.Println("Logged in!")
 }
 
 func selectMailBox() {
-  connectToClientServer()
-  mbox, err := c.selectMailBox("INBOX", false)
-  if err != nil {
-    log.Fatal(err)
-  }
-  log.Println("Flags for inbox: ", mbox.Flags)
+	mbox, err := c.Select("INBOX", false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Flags for inbox: ", mbox.Flags)
 
 }
 
 func main() {
-  connectToClientServer()
+	connectToClientServer()
 }
