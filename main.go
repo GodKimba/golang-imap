@@ -5,6 +5,7 @@ import (
 	"log"
 	"github.com/joho/godotenv"
 	"os"
+	"fmt"
 )
 
 //"github.com/emersion/go-imap"
@@ -12,7 +13,7 @@ import (
 
 // Function to get the environment variable from .evn
 func getEnvKey(key string) string {
-	err := godoenv.Load()
+	err := godotenv.Load()
 	
 	if err != nil {
 		log.Fatalf("Error  loading .env file")
@@ -21,36 +22,37 @@ func getEnvKey(key string) string {
 	return os.Getenv(key)
 }
 
+var userMailAccount = getEnvKey("USERNAME")
+var userMailPassword = getEnvKey("PASSWORD")
 const mailServer = "imap.gmail.com:993"
-const userMailPassword = "password"
 
 
-
-var c *client.Client
 
 func connectToClientServer() {
 	c, err := client.DialTLS(mailServer, nil)
 	if err != nil {
 		log.Fatalf("Couldn't login, %v", err)
 	}
+	
 
 	log.Println("Connected")
-
+	defer c.Logout()
 	if err := c.Login(userMailAccount, userMailPassword); err != nil {
 		log.Fatalf("Couldn't login, %v", err)
 	}
 	log.Println("Logged in!")
 }
 
-func selectMailBox() {
-	mbox, err := c.Select("INBOX", false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Flags for inbox: ", mbox.Flags)
+//func selectMailBox() {
+	//mbox, err := c.Select("INBOX", false)
+	//if err != nil {
+		//log.Fatal(err)
+	//}
+	//log.Println("Flags for inbox: ", mbox.Flags)
 
-}
+//}
 
 func main() {
+	fmt.Println(userMailAccount, userMailPassword)
 	connectToClientServer()
 }
