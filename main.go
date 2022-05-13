@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/emersion/go-imap/client"
-	"log"
-	"github.com/joho/godotenv"
-	"os"
 	"fmt"
+	"log"
+	"os"
+
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
+	"github.com/joho/godotenv"
 )
 
 //"github.com/emersion/go-imap"
@@ -33,6 +35,7 @@ func connectToClientServer(c *client.Client, err error) {
 	if err != nil {
 		log.Fatalf("Couldn't login, %v", err)
 	}
+
 	
 	log.Println("Connected")
 	defer c.Logout()
@@ -41,19 +44,31 @@ func connectToClientServer(c *client.Client, err error) {
 		log.Fatalf("Couldn't login, %v", err)
 	}
 	log.Println("Logged in!")
-}
 
-func selectMailBox(c *client.Client) {
 	mbox, err := c.Select("INBOX", false)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Flags for inbox: ", mbox.Flags)
-
+	
+	// Searching criteria almost working, lines below are responsible for it
+	keyword := "rafael"
+	criteria := imap.NewSearchCriteria()
+	criteria.Header.Get(keyword)
+	c.Search(criteria)
+	fmt.Println(criteria)
+	
 }
+
+//func selectMailBox(c *client.Client, err error) {
+//}
 
 func main() {
 	fmt.Println(userMailAccount, userMailPassword)
 	connectToClientServer(c, nil)
-	selectMailBox(c)
+
+
+	
 }
+
+	
