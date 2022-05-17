@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"fmt"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -12,7 +13,7 @@ import (
 //"github.com/emersion/go-imap"
 // https://github.com/emersion/go-imap/wiki/Fetching-messages
 
-// Function to get the environment variable from .evn
+// getting environment variables
 func getEnvKey(key string) string {
 	err := godotenv.Load()
 
@@ -25,14 +26,21 @@ func getEnvKey(key string) string {
 
 var userMailAccount = getEnvKey("USERNAME")
 var userMailPassword = getEnvKey("PASSWORD")
+var deletionType string
+var c *client.Client
 
 const mailServer = "imap.gmail.com:993"
+
 
 type User struct {
 	c *client.Client
 }
 
-var c *client.Client
+func selectDeletionType() {
+	
+}
+
+
 
 func NewClient() *User {
 	return &User{c: c}
@@ -63,7 +71,10 @@ func (u *User) selectMailBox(err error) {
 
 func (u *User) searchingCriteria(err error) []uint32 {
 	criteria := imap.NewSearchCriteria()
-	criteria.Header.Add("SUBJECT", "Rafael")
+	// Requesting user input
+	fmt.Println("Do you want to delete by subject or sender?") // This line is responsable for subject selection
+	fmt.Scanln(&deletionType)
+	criteria.Header.Add(deletionType, "Rafael")
 	ids, err := u.c.Search(criteria)
 	if err != nil {
 		log.Fatal(err)
