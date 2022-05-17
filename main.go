@@ -83,6 +83,7 @@ func (u *User) showMessages(ids []uint32, err error) {
 			done <- u.c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
 		}()
 		log.Println("To be deleted messages:")
+		// change here to apply deletion
 		for msg := range messages {
 			log.Println("* " + msg.Envelope.Subject)
 		}
