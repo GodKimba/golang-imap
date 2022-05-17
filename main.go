@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/emersion/go-imap"
+	//"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/joho/godotenv"
 )
@@ -28,8 +28,40 @@ var userMailPassword = getEnvKey("PASSWORD")
 
 const mailServer = "imap.gmail.com:993"
 
+type User struct {
+	c *client.Client
+}
+
 var c *client.Client
 
+func NewClient() *User {
+	return &User{c: c}
+}
+
+func (u *User) conectToMailServer(err error) {
+	u.c, err = client.DialTLS(mailServer, nil)
+	if err != nil {
+		log.Fatalf("Couldn't login, %v", err)
+	}
+	log.Println("Connected")
+}
+
+func (u *User) loginToMailServer(err error) {
+	if err := u.c.Login(userMailAccount, userMailPassword); err != nil {
+		log.Fatalf("Couldn't login, %v", err)
+	}
+	log.Println("Logged in!")
+}
+
+func (u *User) selectMailBox(err error) {
+	mbox, err := u.c.Select("INBOX", false)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Flags for inbox:", mbox.Flags)
+}
+
+/*
 func connectToClientServer(c *client.Client, err error) {
 	c, err = client.DialTLS(mailServer, nil)
 	if err != nil {
@@ -76,11 +108,16 @@ func connectToClientServer(c *client.Client, err error) {
 
 		if err := <-done; err != nil {
 			log.Fatal(err)
-		}
+         }
 	}
 }
+
+*/
 func main() {
-	connectToClientServer(c, nil)
+	u := NewClient()
+	u.conectToMailServer(nil)
+	u.loginToMailServer(nil)
+	u.selectMailBox(nil)
 }
 
 //func selectMailBox(c *client.Client, err error) {
