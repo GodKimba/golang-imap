@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"fmt"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -27,20 +27,14 @@ func getEnvKey(key string) string {
 var userMailAccount = getEnvKey("USERNAME")
 var userMailPassword = getEnvKey("PASSWORD")
 var deletionType string
+var deletionSpecify string
 var c *client.Client
 
 const mailServer = "imap.gmail.com:993"
 
-
 type User struct {
 	c *client.Client
 }
-
-func selectDeletionType() {
-	
-}
-
-
 
 func NewClient() *User {
 	return &User{c: c}
@@ -74,7 +68,10 @@ func (u *User) searchingCriteria(err error) []uint32 {
 	// Requesting user input
 	fmt.Println("Do you want to delete by subject or sender?") // This line is responsable for subject selection
 	fmt.Scanln(&deletionType)
-	criteria.Header.Add(deletionType, "Rafael")
+	fmt.Println("Enter the keyword/mail address")
+	fmt.Scanln(&deletionSpecify)
+
+	criteria.Header.Add(deletionType, deletionSpecify)
 	ids, err := u.c.Search(criteria)
 	if err != nil {
 		log.Fatal(err)
@@ -101,6 +98,16 @@ func (u *User) showMessages(ids []uint32, err error) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		item := imap.FormatFlagsOp(imap.AddFlags, true)
+		flags := []interface{}{imap.DeletedFlag}
+		if err := u.c.Store(seqset, item, flags, nil); err != nil {
+			log.Fatal(err)
+		}
+		// Then delete it
+		if err := u.c.Expunge(nil); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Last message has been deleted")
 	}
 }
 
