@@ -10,7 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// getting environment variables
 func getEnvKey(key string) string {
 	err := godotenv.Load()
 
@@ -21,8 +20,8 @@ func getEnvKey(key string) string {
 	return os.Getenv(key)
 }
 
-var userMailAccount = getEnvKey("USERNAME")
-var userMailPassword = getEnvKey("PASSWORD")
+var userMailAccount string
+var userMailPassword string
 var deletionType string
 var deletionSpecify string
 var c *client.Client
@@ -38,6 +37,38 @@ type User struct {
 
 func NewClient() *User {
 	return &User{c: c}
+}
+
+func (u *User) createEnvFile() {
+	var username string
+	var password string
+
+	f, err := os.Create(".env")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	fmt.Println("Enter your Mail Address: ")
+	fmt.Scanln(&username)
+	fmt.Println("Enter your Mail App Password")
+	fmt.Scanln(&password)
+	_, err2 := f.WriteString("USERNAME:" + username + "\nPASSWORD: " + password)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	fmt.Println("File created")
+}
+
+func (u *User) checkIfEnvFileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func (u *User) chooseDeletionType(err error) (string, string) {
@@ -137,6 +168,17 @@ func (u *User) flagAndDelete(ids []uint32, err error) {
 
 func main() {
 	u := NewClient()
+	if u.checkIfEnvFileExists(".evn") {
+		fmt.Println("User credentials selected")
+
+	} else {
+		u.createEnvFile()
+
+	}
+
+	userMailAccount = getEnvKey("USERNAME")
+	userMailPassword = getEnvKey("PASSWORD")
+
 	u.conectToMailServer(nil)
 	u.loginToMailServer(nil)
 	u.selectMailBox(nil)
