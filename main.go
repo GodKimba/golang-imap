@@ -10,9 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//"github.com/emersion/go-imap"
-// https://github.com/emersion/go-imap/wiki/Fetching-messages
-
 // getting environment variables
 func getEnvKey(key string) string {
 	err := godotenv.Load()
@@ -30,6 +27,9 @@ var deletionType string
 var deletionSpecify string
 var c *client.Client
 
+var deleteBySubject = "SUBJECT"
+var deleteBySender = "FROM"
+
 const mailServer = "imap.gmail.com:993"
 
 type User struct {
@@ -38,6 +38,28 @@ type User struct {
 
 func NewClient() *User {
 	return &User{c: c}
+}
+
+func (u *User) chooseDeletionType(err error) (string, string) {
+	fmt.Println("Do you want to delete by subject(s) or sender(sd)?")
+	fmt.Scanln(&deletionType)
+	if deletionType == "s" {
+		fmt.Println("Enter the keyword:")
+		fmt.Scanln(&deletionSpecify)
+
+		deletionType = deleteBySubject
+
+	} else if deletionType == "sd" {
+		fmt.Println("Enter the sender mail:")
+		fmt.Scanln(&deletionSpecify)
+
+		deletionType = deleteBySender
+
+	} else {
+		log.Println("Try again.")
+		return u.chooseDeletionType(nil)
+	}
+	return deletionType, deletionSpecify
 }
 
 func (u *User) conectToMailServer(err error) {
@@ -63,14 +85,11 @@ func (u *User) selectMailBox(err error) {
 	log.Println("Flags for inbox:", mbox.Flags)
 }
 
-func (u *User) searchingCriteria(err error) []uint32 {
+func (u *User) searchingCriteria(deletionType, deletionSpecify string, err error) []uint32 {
 	criteria := imap.NewSearchCriteria()
-	// Requesting user input
-	fmt.Println("Do you want to delete by subject or sender?") // This line is responsable for subject selection
-	fmt.Scanln(&deletionType)
-	fmt.Println("Enter the keyword/mail address")
-	fmt.Scanln(&deletionSpecify)
-
+	// This line is responsable for subject selection
+	//criteria.Header.Add(deleteBySubject, deletionSpecify)
+	//criteria.Header.Add(deleteBySender, deletionSpecify)
 	criteria.Header.Add(deletionType, deletionSpecify)
 	ids, err := u.c.Search(criteria)
 	if err != nil {
@@ -98,6 +117,13 @@ func (u *User) showMessages(ids []uint32, err error) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+}
+func (u *User) flagAndDelete(ids []uint32, err error) {
+	if len(ids) > 0 {
+		seqset := new(imap.SeqSet)
+		seqset.AddNum(ids...)
+
 		item := imap.FormatFlagsOp(imap.AddFlags, true)
 		flags := []interface{}{imap.DeletedFlag}
 		if err := u.c.Store(seqset, item, flags, nil); err != nil {
@@ -116,21 +142,8 @@ func main() {
 	u.conectToMailServer(nil)
 	u.loginToMailServer(nil)
 	u.selectMailBox(nil)
-	ids := u.searchingCriteria(nil)
+	u.chooseDeletionType(nil)
+	ids := u.searchingCriteria(deletionType, deletionSpecify, nil)
 	u.showMessages(ids, nil)
+	u.flagAndDelete(ids, nil)
 }
-
-//func selectMailBox(c *client.Client, err error) {
-//}
-
-// Expunge func
-// item := imap.FormatFlagsOp(imap.AddFlags, true)
-// flags := []interface{}{imap.DeletedFlag}
-// if err := c.Store(seqset, item, flags, nil); err != nil {
-// 	log.Fatal(err)
-// }
-// // Then delete it
-// if err := c.Expunge(nil); err != nil {
-// 	log.Fatal(err)
-// }
-// log.Println("Last message has been deleted")
