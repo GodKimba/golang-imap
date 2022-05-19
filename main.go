@@ -87,9 +87,6 @@ func (u *User) selectMailBox(err error) {
 
 func (u *User) searchingCriteria(deletionType, deletionSpecify string, err error) []uint32 {
 	criteria := imap.NewSearchCriteria()
-	// This line is responsable for subject selection
-	//criteria.Header.Add(deleteBySubject, deletionSpecify)
-	//criteria.Header.Add(deleteBySender, deletionSpecify)
 	criteria.Header.Add(deletionType, deletionSpecify)
 	ids, err := u.c.Search(criteria)
 	if err != nil {
@@ -120,6 +117,7 @@ func (u *User) showMessages(ids []uint32, err error) {
 	}
 }
 func (u *User) flagAndDelete(ids []uint32, err error) {
+	defer u.c.Logout()
 	if len(ids) > 0 {
 		seqset := new(imap.SeqSet)
 		seqset.AddNum(ids...)
