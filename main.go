@@ -148,7 +148,6 @@ func (u *User) showMessages(ids []uint32, err error) {
 	}
 }
 func (u *User) flagAndDelete(ids []uint32, err error) {
-	defer u.c.Logout()
 	if len(ids) > 0 {
 		seqset := new(imap.SeqSet)
 		seqset.AddNum(ids...)
@@ -158,7 +157,7 @@ func (u *User) flagAndDelete(ids []uint32, err error) {
 		if err := u.c.Store(seqset, item, flags, nil); err != nil {
 			log.Fatal(err)
 		}
-		// Then delete it
+
 		if err := u.c.Expunge(nil); err != nil {
 			log.Fatal(err)
 		}
@@ -168,10 +167,11 @@ func (u *User) flagAndDelete(ids []uint32, err error) {
 
 func main() {
 	u := NewClient()
-	if u.checkIfEnvFileExists(".evn") {
+	if u.checkIfEnvFileExists(".env") {
 		fmt.Println("User credentials selected")
 
 	} else {
+		fmt.Println("Gmail requires you to use a specific password for apps.\nYou only need to create one time, follow instructions in this link:\nhttps://support.google.com/accounts/answer/185833?hl=en")
 		u.createEnvFile()
 
 	}
@@ -181,6 +181,8 @@ func main() {
 
 	u.conectToMailServer(nil)
 	u.loginToMailServer(nil)
+	defer u.c.Logout()
+
 	u.selectMailBox(nil)
 	u.chooseDeletionType(nil)
 	ids := u.searchingCriteria(deletionType, deletionSpecify, nil)
